@@ -1,3 +1,0 @@
-/home/ivin/git/Turnable/build/CMakeFiles/Turnable.dir
-/home/ivin/git/Turnable/build/CMakeFiles/edit_cache.dir
-/home/ivin/git/Turnable/build/CMakeFiles/rebuild_cache.dir
