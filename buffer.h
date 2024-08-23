@@ -8,6 +8,7 @@ class TextBuffer {
 public:
     TextBuffer();           // constructor
     void displayText();           // method
+    void centreText();           // method
 
     void append(const std::string& text);
     void insert(size_t position, const std::string& text);
