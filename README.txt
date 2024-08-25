@@ -1,5 +1,11 @@
 # TURNABLE #
 
+dependencies:
+ - ncurses
+ - sfml
+
+
+
 possible libraries:
 
  - JUCE: A widely-used framework for developing audio applications and plugins, including support for MIDI.
