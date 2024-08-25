@@ -3,13 +3,12 @@
 #include <ncurses.h>
 
 
-//Sounds::Sounds() {
-    // consturctor
-//};
+// constructor
+Sounds::Sounds(const std::string& w) : wavfile(w) {}
 
 void Sounds::play() {
     sf::SoundBuffer s_buffer;
-    if (!s_buffer.loadFromFile("/home/ivin/git/Turnable/source/audio_samples/dj-airhorn-sound.wav")) {
+    if (!s_buffer.loadFromFile(wavfile)) {
         printw("Failed to open file");
     }
     sf::Sound sound;

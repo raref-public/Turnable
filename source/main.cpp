@@ -1,6 +1,7 @@
 #include <ncurses.h>
 #include <buffer/buffer.h>
 #include <sounds/sounds.h>
+#include <thread>
 #include <string>
 
 int main() {
@@ -9,11 +10,13 @@ int main() {
     keypad(stdscr, TRUE);   // Enable special keys to be captured
     noecho();               // Do not display typed characters
 
+    // can we rewrite to make it like above syntax ^^^
     TextBuffer text_buffer_obj;
     text_buffer_obj.displayText();
 
-    
-    Sounds sound_obj;
+    // can we rewrite to make it like above syntax ^^^
+    std::string path = "./source/audio_samples/dj-airhorn-sound.wav";
+    Sounds sound_obj(path);
     sound_obj.play();
 
     printw("Press any key to see it. Press 'q' to quit.");

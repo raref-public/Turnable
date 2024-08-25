@@ -4,9 +4,9 @@
 #include <fstream>
 #include "buffer.h"
 
-TextBuffer::TextBuffer() {
+//TextBuffer::TextBuffer() {
     // consturctor
-};
+//};
 
 
 void TextBuffer::displayText() {
@@ -16,7 +16,7 @@ void TextBuffer::displayText() {
     getmaxyx(stdscr, rows, cols);
     int y = rows / 6;
 
-    std::ifstream file("ascii.txt");
+    std::ifstream file("./source/ascii/ascii.txt");
     if (!file.is_open()) {
         printw("Failed to open file");
         refresh();
@@ -33,8 +33,4 @@ void TextBuffer::displayText() {
     file.close();
 
     refresh();
-}
-
-void TextBuffer::centreText() {
-
 }
