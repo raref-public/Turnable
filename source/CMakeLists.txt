@@ -11,7 +11,7 @@ find_package(Curses REQUIRED)
 # find sfml
 find_package(SFML 2.6 COMPONENTS audio system REQUIRED)
 
-add_executable(Turnable main.cpp buffer/buffer.cpp sounds/sounds.cpp)
+add_executable(Turnable main.cpp buffer/buffer.cpp sounds/sounds.cpp meta_data/audfile.cpp)
 
 
 # Link ncurses to your executable
