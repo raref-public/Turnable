@@ -7,6 +7,15 @@
 #include <threading/threading.h>
 #include <meta_data/audfile.h>
 #include <filesystem>
+#include <visual/wav_visual.h>
+#include <midi/midi_instrument.h>
+
+// Enum for vim-like modes
+enum class VimMode {
+    NORMAL,  // Default mode with hjkl navigation
+    INSERT,  // For custom midi instrument keys (placeholder)
+    VISUAL   // For displaying visual representation of WAV files
+};
 
 class SoundPlayerUI {
 public:
@@ -82,6 +91,33 @@ private:
     
     // Clean up resources
     void cleanup();
+    
+    // Current vim mode
+    VimMode m_currentMode;
+    
+    // Handle input in normal mode
+    bool handleNormalModeInput(int ch);
+    
+    // Handle input in insert mode
+    bool handleInsertModeInput(int ch);
+    
+    // Handle input in visual mode
+    bool handleVisualModeInput(int ch);
+    
+    // Switch to normal mode
+    void switchToNormalMode();
+    
+    // Switch to insert mode
+    void switchToInsertMode();
+    
+    // Switch to visual mode
+    void switchToVisualMode();
+    
+    // Display mode indicator
+    void displayModeIndicator();
+    
+    // Display visual representation of WAV file
+    void displayWavVisual();
 };
 
 #endif // SOUND_PLAYER_UI_H

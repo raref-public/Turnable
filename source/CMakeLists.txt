@@ -18,6 +18,8 @@ add_executable(Turnable
     meta_data/audfile.cpp 
     threading/threading.cpp
     ui/sound_player_ui.cpp
+    midi/midi_instrument.cpp
+    visual/wav_visual.cpp
 )
 
 

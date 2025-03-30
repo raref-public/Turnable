@@ -16,6 +16,7 @@ SoundPlayerUI::SoundPlayerUI()
     , m_contentStartY(0)
     , m_controlsStartY(0)
     , m_statusLineY(0)
+    , m_currentMode(VimMode::NORMAL)
 {
 }
 
@@ -71,6 +72,9 @@ void SoundPlayerUI::run()
     
     // Display controls
     displayControls();
+    
+    // Display mode indicator
+    displayModeIndicator();
     
     // Update status window
     updateStatusWindow();
@@ -224,10 +228,37 @@ void SoundPlayerUI::updateStatusWindow()
 
 bool SoundPlayerUI::handleInput(int ch)
 {
+    // Display the current mode
+    displayModeIndicator();
+    
+    // Handle input based on the current mode
+    switch (m_currentMode) {
+        case VimMode::NORMAL:
+            return handleNormalModeInput(ch);
+        case VimMode::INSERT:
+            return handleInsertModeInput(ch);
+        case VimMode::VISUAL:
+            return handleVisualModeInput(ch);
+        default:
+            return true;
+    }
+}
+
+bool SoundPlayerUI::handleNormalModeInput(int ch)
+{
     bool selection_changed = false;
     
     // Handle vim motions
     switch(ch) {
+        // Mode switching
+        case 'i':
+            switchToInsertMode();
+            break;
+            
+        case 'v':
+            switchToVisualMode();
+            break;
+            
         // Vim motion: j (down)
         case 'j':
             moveSelectionDown();
@@ -301,6 +332,177 @@ bool SoundPlayerUI::handleInput(int ch)
     }
     
     return true;
+}
+
+bool SoundPlayerUI::handleInsertModeInput(int ch)
+{
+    // Handle Escape key to return to normal mode
+    if (ch == 27) { // ESC key
+        switchToNormalMode();
+        return true;
+    }
+    
+    // Placeholder for custom midi instrument keys
+    mvwprintw(m_mainWin, m_statusLineY, 2, "Insert mode: Key %c pressed (MIDI placeholder)              ", ch);
+    
+    return true;
+}
+
+bool SoundPlayerUI::handleVisualModeInput(int ch)
+{
+    // Handle Escape key to return to normal mode
+    if (ch == 27) { // ESC key
+        switchToNormalMode();
+        return true;
+    }
+    
+    bool selection_changed = false;
+    
+    // Allow navigation in visual mode
+    switch(ch) {
+        case 'j':
+            moveSelectionDown();
+            selection_changed = true;
+            break;
+            
+        case 'k':
+            moveSelectionUp();
+            selection_changed = true;
+            break;
+            
+        case 'h':
+            moveSelectionUp();
+            selection_changed = true;
+            break;
+            
+        case 'l':
+            moveSelectionDown();
+            selection_changed = true;
+            break;
+            
+        default:
+            mvwprintw(m_mainWin, m_statusLineY, 2, "Visual mode: You pressed: %c                         ", ch);
+            break;
+    }
+    
+    // If selection changed, update the display and the visual representation
+    if (selection_changed) {
+        displaySoundFiles();
+        displayWavVisual();
+    }
+    
+    return true;
+}
+
+void SoundPlayerUI::switchToNormalMode()
+{
+    m_currentMode = VimMode::NORMAL;
+    mvwprintw(m_mainWin, m_statusLineY, 2, "Switched to NORMAL mode                                  ");
+    
+    // Update the status window to show playing sounds
+    updateStatusWindow();
+    
+    // Refresh the display
+    displayModeIndicator();
+    wrefresh(m_mainWin);
+    wrefresh(m_statusWin);
+}
+
+void SoundPlayerUI::switchToInsertMode()
+{
+    m_currentMode = VimMode::INSERT;
+    mvwprintw(m_mainWin, m_statusLineY, 2, "Switched to INSERT mode (MIDI placeholder)                ");
+    
+    // Update the display
+    displayModeIndicator();
+    wrefresh(m_mainWin);
+}
+
+void SoundPlayerUI::switchToVisualMode()
+{
+    m_currentMode = VimMode::VISUAL;
+    mvwprintw(m_mainWin, m_statusLineY, 2, "Switched to VISUAL mode                                   ");
+    
+    // Display the visual representation of the selected WAV file
+    displayWavVisual();
+    
+    // Update the display
+    displayModeIndicator();
+    wrefresh(m_mainWin);
+    wrefresh(m_statusWin);
+}
+
+void SoundPlayerUI::displayModeIndicator()
+{
+    // Display the current mode in the top-right corner of the main window
+    std::string mode_text;
+    
+    switch (m_currentMode) {
+        case VimMode::NORMAL:
+            mode_text = "-- NORMAL --";
+            break;
+        case VimMode::INSERT:
+            mode_text = "-- INSERT --";
+            break;
+        case VimMode::VISUAL:
+            mode_text = "-- VISUAL --";
+            break;
+    }
+    
+    // Calculate position for right-aligned text
+    int mode_x = m_maxX - mode_text.length() - 4;
+    
+    // Display the mode indicator
+    mvwprintw(m_mainWin, 1, mode_x, "%s", mode_text.c_str());
+    wrefresh(m_mainWin);
+}
+
+void SoundPlayerUI::displayWavVisual()
+{
+    // Clear the status window
+    werase(m_statusWin);
+    box(m_statusWin, 0, 0);
+    
+    // Check if we have a valid selection
+    if (m_selectedIndex < 0 || m_selectedIndex >= static_cast<int>(m_soundPaths.size())) {
+        mvwprintw(m_statusWin, 1, 2, "No valid WAV file selected");
+        wrefresh(m_statusWin);
+        return;
+    }
+    
+    // Get the selected file path
+    std::string filePath = m_soundPaths[m_selectedIndex];
+    std::string filename = std::filesystem::path(filePath).filename().string();
+    
+    // Display the filename
+    mvwprintw(m_statusWin, 1, 2, "Visual representation of: %s", filename.c_str());
+    
+    // Create a WavVisual object for the selected file
+    WavVisual wavVisual(filePath);
+    
+    // Check if the WAV file is valid
+    if (!wavVisual.isValid()) {
+        mvwprintw(m_statusWin, 3, 2, "Invalid WAV file");
+        wrefresh(m_statusWin);
+        return;
+    }
+    
+    // Get the dimensions of the status window
+    int height, width;
+    getmaxyx(m_statusWin, height, width);
+    
+    // Generate a visual representation of the WAV file
+    if (!wavVisual.generateVisual(width - 4, height - 4)) {
+        mvwprintw(m_statusWin, 3, 2, "Failed to generate visual representation");
+        wrefresh(m_statusWin);
+        return;
+    }
+    
+    // Display the visual representation
+    wavVisual.displayVisual(m_statusWin, 3, 2);
+    
+    // Refresh the status window
+    wrefresh(m_statusWin);
 }
 
 void SoundPlayerUI::toggleSound(int index)
@@ -377,26 +579,29 @@ void SoundPlayerUI::displayControls()
 {
     mvwprintw(m_mainWin, m_controlsStartY, 2, "Controls:");
     
+    // Show vim mode controls
+    mvwprintw(m_mainWin, m_controlsStartY + 1, 4, "Mode switching: i (insert), v (visual), ESC (normal)");
+    
     // Show vim navigation controls
-    mvwprintw(m_mainWin, m_controlsStartY + 1, 4, "Vim motions: h (left), j (down), k (up), l (right)");
-    mvwprintw(m_mainWin, m_controlsStartY + 2, 4, "Enter/Space: Toggle selected sound");
+    mvwprintw(m_mainWin, m_controlsStartY + 2, 4, "Vim motions: h (left), j (down), k (up), l (right)");
+    mvwprintw(m_mainWin, m_controlsStartY + 3, 4, "Enter/Space: Toggle selected sound");
     
     // Show number keys for all available sound files
     if (!m_soundPaths.empty()) {
         if (m_soundPaths.size() <= 9) {
             // If 9 or fewer sounds, we can use single digit keys
-            mvwprintw(m_mainWin, m_controlsStartY + 3, 4, "1-%d: Toggle sound playback", m_soundPaths.size());
+            mvwprintw(m_mainWin, m_controlsStartY + 4, 4, "1-%d: Toggle sound playback", m_soundPaths.size());
         } else {
             // If more than 9 sounds, indicate that only first 9 are accessible
-            mvwprintw(m_mainWin, m_controlsStartY + 3, 4, "1-9: Toggle first 9 sound files");
+            mvwprintw(m_mainWin, m_controlsStartY + 4, 4, "1-9: Toggle first 9 sound files");
         }
     } else {
-        mvwprintw(m_mainWin, m_controlsStartY + 3, 4, "No sound files available");
+        mvwprintw(m_mainWin, m_controlsStartY + 4, 4, "No sound files available");
     }
     
-    mvwprintw(m_mainWin, m_controlsStartY + 4, 4, "w: Wait for all sound threads to complete");
-    mvwprintw(m_mainWin, m_controlsStartY + 5, 4, "s: Stop all sounds");
-    mvwprintw(m_mainWin, m_controlsStartY + 6, 4, "q: Quit");
+    mvwprintw(m_mainWin, m_controlsStartY + 5, 4, "w: Wait for all sound threads to complete");
+    mvwprintw(m_mainWin, m_controlsStartY + 6, 4, "s: Stop all sounds");
+    mvwprintw(m_mainWin, m_controlsStartY + 7, 4, "q: Quit");
 }
 
 void SoundPlayerUI::cleanup()

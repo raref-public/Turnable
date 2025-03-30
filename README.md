@@ -5,7 +5,11 @@ Turnable is a terminal-based audio player that allows you to play multiple sound
 ## Features
 
 - Play multiple sound files concurrently in separate threads
-- Vim-like navigation (hjkl) for selecting sound files
+- Vim-like modes and navigation:
+  - **Normal mode**: Default mode with hjkl navigation for selecting sound files
+  - **Insert mode**: Placeholder for custom MIDI instrument keys (press 'i' to enter)
+  - **Visual mode**: Shows a text-based visual representation of the selected WAV file (press 'v' to enter)
+  - Press ESC to return to normal mode from any other mode
 - Visual highlighting of the currently selected sound
 - Real-time status display of currently playing sounds
 - Dynamic loading of WAV files from a directory
